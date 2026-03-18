@@ -40,6 +40,12 @@ export interface EmailMessage {
   bcc?: string | string[];
   /** Reply-To address */
   replyTo?: string;
+  /** File attachments */
+  attachments?: Array<{
+    filename: string;
+    data: Buffer | Blob;
+    contentType?: string;
+  }>;
   /** Custom Mailgun tags for analytics */
   tags?: string[];
   /** Custom variables (appear in webhooks/events) */
@@ -148,27 +154,48 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     ? 'https://api.eu.mailgun.net'
     : 'https://api.mailgun.net';
 
-  const form = new URLSearchParams();
-  form.append('from', message.from);
-  form.append('to', Array.isArray(message.to) ? message.to.join(', ') : message.to);
-  form.append('subject', message.subject);
+  // Use FormData when attachments present, URLSearchParams otherwise
+  const hasAttachments = message.attachments && message.attachments.length > 0;
+  let body: FormData | URLSearchParams;
 
-  if (message.html) form.append('html', message.html);
-  if (message.text) form.append('text', message.text);
-  if (message.cc) form.append('cc', Array.isArray(message.cc) ? message.cc.join(', ') : message.cc);
-  if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);
-  if (message.replyTo) form.append('h:Reply-To', message.replyTo);
-
-  if (message.tags?.length) {
-    for (const tag of message.tags) {
-      form.append('o:tag', tag);
+  if (hasAttachments) {
+    const form = new FormData();
+    form.append('from', message.from);
+    form.append('to', Array.isArray(message.to) ? message.to.join(', ') : message.to);
+    form.append('subject', message.subject);
+    if (message.html) form.append('html', message.html);
+    if (message.text) form.append('text', message.text);
+    if (message.cc) form.append('cc', Array.isArray(message.cc) ? message.cc.join(', ') : message.cc);
+    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);
+    if (message.replyTo) form.append('h:Reply-To', message.replyTo);
+    if (message.tags?.length) {
+      for (const tag of message.tags) form.append('o:tag', tag);
     }
-  }
-
-  if (message.variables) {
-    for (const [key, value] of Object.entries(message.variables)) {
-      form.append(`v:${key}`, value);
+    if (message.variables) {
+      for (const [key, value] of Object.entries(message.variables)) form.append(`v:${key}`, value);
     }
+    for (const att of message.attachments!) {
+      const blob = att.data instanceof Blob ? att.data : new Blob([new Uint8Array(att.data)], { type: att.contentType || 'application/octet-stream' });
+      form.append('attachment', blob, att.filename);
+    }
+    body = form;
+  } else {
+    const form = new URLSearchParams();
+    form.append('from', message.from);
+    form.append('to', Array.isArray(message.to) ? message.to.join(', ') : message.to);
+    form.append('subject', message.subject);
+    if (message.html) form.append('html', message.html);
+    if (message.text) form.append('text', message.text);
+    if (message.cc) form.append('cc', Array.isArray(message.cc) ? message.cc.join(', ') : message.cc);
+    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);
+    if (message.replyTo) form.append('h:Reply-To', message.replyTo);
+    if (message.tags?.length) {
+      for (const tag of message.tags) form.append('o:tag', tag);
+    }
+    if (message.variables) {
+      for (const [key, value] of Object.entries(message.variables)) form.append(`v:${key}`, value);
+    }
+    body = form;
   }
 
   try {
@@ -177,7 +204,7 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
       headers: {
         'Authorization': 'Basic ' + Buffer.from(`api:${apiKey}`).toString('base64'),
       },
-      body: form,
+      body,
     });
 
     if (!resp.ok) {
