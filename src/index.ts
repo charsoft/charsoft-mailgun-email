@@ -2,7 +2,7 @@
  * @charsoft/mailgun-email
  *
  * Shared Mailgun email service for all Charsoft Training Partners apps.
- * Uses native fetch â€” no mailgun.js dependency needed.
+ * Uses native fetch — no mailgun.js dependency needed.
  *
  * Usage:
  *   import { sendEmail, initMailgun } from '@charsoft/mailgun-email';
@@ -24,9 +24,9 @@
 // ---------------------------------------------------------------------------
 
 export interface EmailMessage {
-  /** Sender, e.g. "Charsoft <noreply@mg.charsoft.com>" */
+  /** Sender, e.g. \"Charsoft <noreply@mg.charsoft.com>\" */
   from: string;
-  /** Recipient(s) â€” string or array */
+  /** Recipient(s) — string or array */
   to: string | string[];
   /** Subject line */
   subject: string;
@@ -50,6 +50,12 @@ export interface EmailMessage {
   tags?: string[];
   /** Custom variables (appear in webhooks/events) */
   variables?: Record<string, string>;
+  /** Enable/disable tracking (o:tracking) */
+  tracking?: boolean;
+  /** Enable/disable open tracking (o:tracking-opens) */
+  trackingOpens?: boolean;
+  /** Enable/disable click tracking (o:tracking-clicks) */
+  trackingClicks?: boolean;
 }
 
 export interface MailgunConfig {
@@ -57,7 +63,7 @@ export interface MailgunConfig {
   apiKey?: string;
   /** API region: 'us' (default) or 'eu' */
   region?: 'us' | 'eu';
-  /** Override domain routing (optional â€” normally auto-detected from "from") */
+  /** Override domain routing (optional — normally auto-detected from \"from\") */
   defaultDomain?: string;
   /** Enable console logging (default: true) */
   logging?: boolean;
@@ -88,7 +94,7 @@ function resolveDomain(from: string, defaultDomain?: string): string {
   if (!match) {
     if (defaultDomain) return defaultDomain;
     throw new Error(
-      `[mailgun-email] Cannot extract domain from "from" address: "${from}". ` +
+      `[mailgun-email] Cannot extract domain from \"from\" address: \"${from}\". ` +
       `Provide a valid email or set defaultDomain in config.`
     );
   }
@@ -100,9 +106,9 @@ function resolveDomain(from: string, defaultDomain?: string): string {
   if (defaultDomain) return defaultDomain;
 
   throw new Error(
-    `[mailgun-email] Unknown sender domain "${senderDomain}". ` +
+    `[mailgun-email] Unknown sender domain \"${senderDomain}\". ` +
     `Known domains: ${Object.keys(DOMAIN_MAP).join(', ')}. ` +
-    `Either use a known domain in your "from" address or set defaultDomain in config.`
+    `Either use a known domain in your \"from\" address or set defaultDomain in config.`
   );
 }
 
@@ -144,7 +150,7 @@ function ensureConfig(): string {
 }
 
 // ---------------------------------------------------------------------------
-// sendEmail â€” native fetch, no dependencies
+// sendEmail — native fetch, no dependencies
 // ---------------------------------------------------------------------------
 
 export async function sendEmail(message: EmailMessage): Promise<SendResult> {
@@ -166,11 +172,14 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     if (message.html) form.append('html', message.html);
     if (message.text) form.append('text', message.text);
     if (message.cc) form.append('cc', Array.isArray(message.cc) ? message.cc.join(', ') : message.cc);
-    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);
+    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);     
     if (message.replyTo) form.append('h:Reply-To', message.replyTo);
     if (message.tags?.length) {
       for (const tag of message.tags) form.append('o:tag', tag);
     }
+    if (message.tracking !== undefined) form.append('o:tracking', message.tracking ? 'yes' : 'no');
+    if (message.trackingOpens !== undefined) form.append('o:tracking-opens', message.trackingOpens ? 'yes' : 'no');
+    if (message.trackingClicks !== undefined) form.append('o:tracking-clicks', message.trackingClicks ? 'yes' : 'no');
     if (message.variables) {
       for (const [key, value] of Object.entries(message.variables)) form.append(`v:${key}`, value);
     }
@@ -187,11 +196,14 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     if (message.html) form.append('html', message.html);
     if (message.text) form.append('text', message.text);
     if (message.cc) form.append('cc', Array.isArray(message.cc) ? message.cc.join(', ') : message.cc);
-    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);
+    if (message.bcc) form.append('bcc', Array.isArray(message.bcc) ? message.bcc.join(', ') : message.bcc);     
     if (message.replyTo) form.append('h:Reply-To', message.replyTo);
     if (message.tags?.length) {
       for (const tag of message.tags) form.append('o:tag', tag);
     }
+    if (message.tracking !== undefined) form.append('o:tracking', message.tracking ? 'yes' : 'no');
+    if (message.trackingOpens !== undefined) form.append('o:tracking-opens', message.trackingOpens ? 'yes' : 'no');
+    if (message.trackingClicks !== undefined) form.append('o:tracking-clicks', message.trackingClicks ? 'yes' : 'no');
     if (message.variables) {
       for (const [key, value] of Object.entries(message.variables)) form.append(`v:${key}`, value);
     }
@@ -219,7 +231,7 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
 
     if (currentConfig.logging) {
       const toStr = Array.isArray(message.to) ? message.to[0] : message.to;
-      console.log(`[mailgun-email] Sent via ${domain} â†’ ${toStr} | ${data.id || 'ok'}`);
+      console.log(`[mailgun-email] Sent via ${domain} ? ${toStr} | ${data.id || 'ok'}`);
     }
 
     return { ok: true, id: data.id, message: data.message || 'Queued' };

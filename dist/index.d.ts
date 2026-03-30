@@ -2,7 +2,7 @@
  * @charsoft/mailgun-email
  *
  * Shared Mailgun email service for all Charsoft Training Partners apps.
- * Uses native fetch — no mailgun.js dependency needed.
+ * Uses native fetch � no mailgun.js dependency needed.
  *
  * Usage:
  *   import { sendEmail, initMailgun } from '@charsoft/mailgun-email';
@@ -19,9 +19,9 @@
  *   initMailgun({ apiKey: 'key-xxx', region: 'us' });
  */
 export interface EmailMessage {
-    /** Sender, e.g. "Charsoft <noreply@mg.charsoft.com>" */
+    /** Sender, e.g. \"Charsoft <noreply@mg.charsoft.com>\" */
     from: string;
-    /** Recipient(s) — string or array */
+    /** Recipient(s) � string or array */
     to: string | string[];
     /** Subject line */
     subject: string;
@@ -45,13 +45,19 @@ export interface EmailMessage {
     tags?: string[];
     /** Custom variables (appear in webhooks/events) */
     variables?: Record<string, string>;
+    /** Enable/disable tracking (o:tracking) */
+    tracking?: boolean;
+    /** Enable/disable open tracking (o:tracking-opens) */
+    trackingOpens?: boolean;
+    /** Enable/disable click tracking (o:tracking-clicks) */
+    trackingClicks?: boolean;
 }
 export interface MailgunConfig {
     /** Mailgun API key (defaults to process.env.MAILGUN_API_KEY) */
     apiKey?: string;
     /** API region: 'us' (default) or 'eu' */
     region?: 'us' | 'eu';
-    /** Override domain routing (optional — normally auto-detected from "from") */
+    /** Override domain routing (optional � normally auto-detected from \"from\") */
     defaultDomain?: string;
     /** Enable console logging (default: true) */
     logging?: boolean;

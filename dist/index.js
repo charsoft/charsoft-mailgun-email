@@ -2,7 +2,7 @@
  * @charsoft/mailgun-email
  *
  * Shared Mailgun email service for all Charsoft Training Partners apps.
- * Uses native fetch — no mailgun.js dependency needed.
+ * Uses native fetch � no mailgun.js dependency needed.
  *
  * Usage:
  *   import { sendEmail, initMailgun } from '@charsoft/mailgun-email';
@@ -34,7 +34,7 @@ function resolveDomain(from, defaultDomain) {
     if (!match) {
         if (defaultDomain)
             return defaultDomain;
-        throw new Error(`[mailgun-email] Cannot extract domain from "from" address: "${from}". ` +
+        throw new Error(`[mailgun-email] Cannot extract domain from \"from\" address: \"${from}\". ` +
             `Provide a valid email or set defaultDomain in config.`);
     }
     const senderDomain = match[1].toLowerCase();
@@ -43,9 +43,9 @@ function resolveDomain(from, defaultDomain) {
         return mgDomain;
     if (defaultDomain)
         return defaultDomain;
-    throw new Error(`[mailgun-email] Unknown sender domain "${senderDomain}". ` +
+    throw new Error(`[mailgun-email] Unknown sender domain \"${senderDomain}\". ` +
         `Known domains: ${Object.keys(DOMAIN_MAP).join(', ')}. ` +
-        `Either use a known domain in your "from" address or set defaultDomain in config.`);
+        `Either use a known domain in your \"from\" address or set defaultDomain in config.`);
 }
 // ---------------------------------------------------------------------------
 // Config singleton
@@ -78,7 +78,7 @@ function ensureConfig() {
     return currentConfig.apiKey;
 }
 // ---------------------------------------------------------------------------
-// sendEmail — native fetch, no dependencies
+// sendEmail � native fetch, no dependencies
 // ---------------------------------------------------------------------------
 export async function sendEmail(message) {
     const apiKey = ensureConfig();
@@ -108,6 +108,12 @@ export async function sendEmail(message) {
             for (const tag of message.tags)
                 form.append('o:tag', tag);
         }
+        if (message.tracking !== undefined)
+            form.append('o:tracking', message.tracking ? 'yes' : 'no');
+        if (message.trackingOpens !== undefined)
+            form.append('o:tracking-opens', message.trackingOpens ? 'yes' : 'no');
+        if (message.trackingClicks !== undefined)
+            form.append('o:tracking-clicks', message.trackingClicks ? 'yes' : 'no');
         if (message.variables) {
             for (const [key, value] of Object.entries(message.variables))
                 form.append(`v:${key}`, value);
@@ -137,6 +143,12 @@ export async function sendEmail(message) {
             for (const tag of message.tags)
                 form.append('o:tag', tag);
         }
+        if (message.tracking !== undefined)
+            form.append('o:tracking', message.tracking ? 'yes' : 'no');
+        if (message.trackingOpens !== undefined)
+            form.append('o:tracking-opens', message.trackingOpens ? 'yes' : 'no');
+        if (message.trackingClicks !== undefined)
+            form.append('o:tracking-clicks', message.trackingClicks ? 'yes' : 'no');
         if (message.variables) {
             for (const [key, value] of Object.entries(message.variables))
                 form.append(`v:${key}`, value);
@@ -161,7 +173,7 @@ export async function sendEmail(message) {
         const data = await resp.json();
         if (currentConfig.logging) {
             const toStr = Array.isArray(message.to) ? message.to[0] : message.to;
-            console.log(`[mailgun-email] Sent via ${domain} → ${toStr} | ${data.id || 'ok'}`);
+            console.log(`[mailgun-email] Sent via ${domain} ? ${toStr} | ${data.id || 'ok'}`);
         }
         return { ok: true, id: data.id, message: data.message || 'Queued' };
     }
